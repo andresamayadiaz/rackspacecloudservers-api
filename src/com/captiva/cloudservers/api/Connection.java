@@ -45,6 +45,8 @@ import org.apache.http.protocol.HttpContext;
 
 import com.captiva.cloudservers.api.common.Flavor;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 @SuppressWarnings("deprecation")
@@ -236,7 +238,7 @@ public class Connection {
             
             InputStream entityStream = null;
             HttpEntity entity = null;
-
+            
             if (logger.isLoggable(Level.FINEST)) {
                 response = getHttpClient().execute(request);
                 entity = response.getEntity();
@@ -262,16 +264,13 @@ public class Connection {
                         /*IBindingFactory bindingFactory = BindingDirectory.getFactory(respType);
                         IUnmarshallingContext unmarshallingCxt = bindingFactory.createUnmarshallingContext();
                         result = (T) unmarshallingCxt.unmarshalDocument(entityStream, "UTF-8");*/
-                        Gson gson = new Gson();
+                        JsonParser parser = new JsonParser();
+            			String ent = IOUtils.toString(entityStream);
+                        logger.log(Level.INFO, ">>> case 203 Entity: {0}", ent);
                         
-                        Type genType = new TypeToken<T>(){}.getType();
+                        JsonObject obj = parser.parse(ent).getAsJsonObject();
                         
-                        logger.log(Level.INFO, ">>> case 203 Entity: {0}", IOUtils.toString(entityStream));
-                        
-                        LinkedHashMap<String, T> datosRegistro = new LinkedHashMap<String, T>();
-                        datosRegistro = gson.fromJson(IOUtils.toString(entityStream), genType);
-                        result = (T) datosRegistro;
-                        //result = gson.fromJson(IOUtils.toString(entityStream), genType);
+                        result = (T) obj;
                         
                     } finally {
                         entity.consumeContent();

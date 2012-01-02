@@ -1,20 +1,20 @@
 package com.captiva.cloudservers.api;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
+import java.net.MalformedURLException;
+
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.captiva.cloudservers.api.common.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.HttpException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.ContentProducer;
-import org.apache.http.entity.EntityTemplate;
-
 
 public class Client extends Connection {
 	private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -31,37 +31,23 @@ public class Client extends Connection {
     }
 	
 	private List<Flavor> buildListOfFlavors(HttpGet request) throws Exception {
-        Flavors response = makeRequestInt(request, Flavors.class); // Flavors.class
-        List<Flavor> flavors = new ArrayList<Flavor>(response.getFlavors().size());
-        for (Flavor flavor : response.getFlavors())
-            flavors.add(buildFlavor(flavor));
+        JsonObject response = makeRequestInt(request, JsonObject.class); // Flavors.class
+        
+        JsonArray flavarray = response.get("flavors").getAsJsonArray();
+        List<Flavor> flavors = null;
+        Gson gson = new Gson();
+        for (JsonElement flavor : flavarray){
+        	Flavor flav = gson.fromJson(flavor, Flavor.class);
+        	flavors.add(buildFlavor(flav));
+        }
+        
         return flavors;
     }
-
+	
     private Flavor buildFlavor(Flavor response) {
         return new Flavor(response.getId(), response.getName(), response.getRam(), response.getDisk());
     }
 	
-	protected <T> T makeEntityRequestInt(HttpEntityEnclosingRequestBase request, final Object entity, Class<T> respType) throws Exception {
-        request.setEntity(new EntityTemplate(new ContentProducer() {
-            public void writeTo(OutputStream output) throws IOException {
-                try {
-                    /*IBindingFactory bindingFactory = BindingDirectory.getFactory(entity.getClass());
-                    final IMarshallingContext marshallingCxt = bindingFactory.createMarshallingContext();
-                    marshallingCxt.marshalDocument(entity, "UTF-8", true, output);*/
-                	logger.log(Level.INFO, ">>> makeEntityRequestInt Entity: {0}", entity.toString());
-                	
-                } catch (Exception e) {
-                    IOException ioe = new IOException("Can't marshal server details");
-                    ioe.initCause(e);
-                    e.printStackTrace();
-                    throw ioe;
-                }
-            }
-        }));
-        return makeRequestInt(request, respType);
-    }
-
     protected void makeRequestInt(HttpRequestBase request) throws Exception {
         makeRequestInt(request, Void.class);
     }
@@ -69,8 +55,14 @@ public class Client extends Connection {
     protected <T> T makeRequestInt(HttpRequestBase request, Class<T> respType) throws Exception {
         try {
             return makeRequest(request, respType);
-        } catch (Exception e) {
-            throw new Exception(e);
+        } catch (MalformedURLException e) {
+            throw new Exception(e.getMessage(), e);
+        } catch (IOException e) {
+            throw new Exception(e.getMessage(), e);
+        } catch (HttpException e) {
+            throw new Exception(e.getMessage(), e);
+        } catch (Exception e){
+        	throw new Exception (e.getMessage(), e);
         }
     }
 	

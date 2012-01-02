@@ -15,8 +15,14 @@ import java.util.List;
  */
 public class Flavors
 {
-    private List<Flavor> flavorList = new ArrayList<Flavor>();
+    private String name = null;
+	private List<Flavor> flavorList = new ArrayList<Flavor>();
     
+	public Flavors(String name, List<Flavor> flavors){
+		this.setName(name);
+		this.flavorList = flavors;
+	}
+	
     public Flavors(List<Flavor> flavors){
     	this.flavorList = flavors;
     }
@@ -38,4 +44,18 @@ public class Flavors
     public void setFlavors(List<Flavor> list) {
         flavorList = list;
     }
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
 }
