@@ -2,8 +2,14 @@ package com.captiva.cloudservers.api;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.captiva.cloudservers.api.common.*;
@@ -11,6 +17,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import net.elasticgrid.rackspace.cloudservers.Addresses;
+import net.elasticgrid.rackspace.cloudservers.CloudServersException;
+import net.elasticgrid.rackspace.cloudservers.Personality;
+import net.elasticgrid.rackspace.cloudservers.Server;
+import net.elasticgrid.rackspace.cloudservers.Server.Status;
+import net.elasticgrid.rackspace.cloudservers.internal.Metadata;
+import net.elasticgrid.rackspace.cloudservers.internal.MetadataItem;
 
 import org.apache.http.HttpException;
 import org.apache.http.client.methods.HttpGet;
@@ -30,11 +44,24 @@ public class Client extends Connection {
         return buildListOfFlavors(request);
     }
 	
+	public Flavor getFlavorDetails(int flavorID) throws Exception {
+        logger.log(Level.INFO, "Retrieving detailed information for flavor {0}...", flavorID);
+        validateFlavorID(flavorID);
+        HttpGet request = new HttpGet(getServerManagementURL() + "/flavors/" + flavorID);
+        
+        JsonObject response = makeRequestInt(request, JsonObject.class);    
+        Flavor flavor = null;
+        Gson gson = new Gson();
+        flavor = gson.fromJson(response.get("flavor"), Flavor.class);
+        
+        return buildFlavor(flavor);
+    }
+	
 	private List<Flavor> buildListOfFlavors(HttpGet request) throws Exception {
         JsonObject response = makeRequestInt(request, JsonObject.class); // Flavors.class
         
         JsonArray flavarray = response.get("flavors").getAsJsonArray();
-        List<Flavor> flavors = null;
+        List<Flavor> flavors = new ArrayList<Flavor>(flavarray.size());
         Gson gson = new Gson();
         for (JsonElement flavor : flavarray){
         	Flavor flav = gson.fromJson(flavor, Flavor.class);
@@ -47,11 +74,97 @@ public class Client extends Connection {
     private Flavor buildFlavor(Flavor response) {
         return new Flavor(response.getId(), response.getName(), response.getRam(), response.getDisk());
     }
+    
+    public List<Image> getImages() throws Exception {
+        logger.info("Retrieving detailed images information...");
+        HttpGet request = new HttpGet(getServerManagementURL() + "/images/detail");
+        
+        return buildListOfImages(request);
+    }
+    
+    public Image getImageDetails(int imageID) throws Exception {
+        logger.log(Level.INFO, "Retrieving detailed information for image {0}...", imageID);
+        validateImageID(imageID);
+        HttpGet request = new HttpGet(getServerManagementURL() + "/images/" + imageID);
+        
+        JsonObject response = makeRequestInt(request, JsonObject.class);    
+        Image image = null;
+        Gson gson = new Gson();
+        image = gson.fromJson(response.get("image"), Image.class);
+        
+        return buildImage(image);
+    }
+    
+    private List<Image> buildListOfImages(HttpGet request) throws Exception {
+    	JsonObject response = makeRequestInt(request, JsonObject.class);
+        JsonArray imgarray = response.get("images").getAsJsonArray();
+        List<Image> images = new ArrayList<Image>(imgarray.size());
+        Gson gson = new Gson();
+        for (JsonElement image : imgarray){
+        	Image img = gson.fromJson(image, Image.class);
+        	images.add(buildImage(img));
+        }
+        return images;
+    }
+    
+    private Image buildImage(Image created) {
+        return new Image(
+                created.getId(), created.getName(), created.getServerId(),
+                created.getUpdated(), created.getCreated(), created.getProgress(),
+                created.getStatus() == null ? null : Image.Status.valueOf(created.getStatus().name())
+        );
+    }
+    
+    public List<Server> getServers() throws Exception {
+        logger.info("Retrieving detailed servers information...");
+        HttpGet request = new HttpGet(getServerManagementURL() + "/servers/detail");
+        return buildListOfServers(request);
+    }
+    
+    public Server getServerDetails(int serverID) throws Exception {
+        logger.log(Level.INFO, "Retrieving detailed information for server {0}...", serverID);
+        validateServerID(serverID);
+        HttpGet request = new HttpGet(getServerManagementURL() + "/servers/" + serverID);
+        return buildServer(makeRequestInt(request, net.elasticgrid.rackspace.cloudservers.internal.Server.class));
+    }
+    
+    private List<Server> buildListOfServers(HttpGet request) throws Exception {
+        Servers response = makeRequestInt(request, Servers.class);
+        List<Server> servers = new ArrayList<Server>(response.getServers().size());
+        for (net.elasticgrid.rackspace.cloudservers.internal.Server server : response.getServers())
+            servers.add(buildServer(server));
+        return servers;
+    }
+    
+    private Server buildServer(Server response) throws Exception {
+        try {
+            return new Server(
+                    response.getId(), response.getName(), response.getAdminPass(),
+                    response.getImageId(), response.getFlavorId(),
+                    response.getStatus() == null ? null : ServerStatus.valueOf(response.getStatus().name()),
+                    metadataAsMap(response.getMetadata()),
+                    new Addresses(response.getAddresses()),
+                    new Personality(response.getPersonality())
+            );
+        } catch (UnknownHostException e) {
+            throw new CloudServersException("Can't build server", e);
+        }
+    }
+    
+    private static Map<String, String> metadataAsMap(Metadata metadata) {
+        if (metadata == null)
+            return Collections.emptyMap();
+        Map<String, String> meta = new HashMap<String, String>();
+        for (MetadataItem item : metadata.getMetadatas()) {
+            meta.put(item.getKey(), item.getString());
+        }
+        return meta;
+    }
 	
     protected void makeRequestInt(HttpRequestBase request) throws Exception {
         makeRequestInt(request, Void.class);
     }
-
+    
     protected <T> T makeRequestInt(HttpRequestBase request, Class<T> respType) throws Exception {
         try {
             return makeRequest(request, respType);
@@ -64,6 +177,26 @@ public class Client extends Connection {
         } catch (Exception e){
         	throw new Exception (e.getMessage(), e);
         }
+    }
+    
+    private void validateServerID(int serverID) throws IllegalArgumentException {
+        if (serverID == 0)
+            throw new IllegalArgumentException("Invalid serverID " + serverID);
+    }
+
+    private void validateFlavorID(int flavorID) throws IllegalArgumentException {
+        if (flavorID == 0)
+            throw new IllegalArgumentException("Invalid flavorID " + flavorID);
+    }
+
+    private void validateImageID(int imageID) throws IllegalArgumentException {
+        if (imageID == 0)
+            throw new IllegalArgumentException("Invalid imageID " + imageID);
+    }
+
+    private void validateSharedIPGroupID(int groupID) throws IllegalArgumentException {
+        if (groupID == 0)
+            throw new IllegalArgumentException("Invalid shared IP group ID " + groupID);
     }
 	
 }

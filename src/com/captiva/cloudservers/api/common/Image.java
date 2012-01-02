@@ -12,12 +12,12 @@ public class Image implements Serializable {
     private final Integer id;
     private final String name;
     private final Integer serverId;
-    private final Date updated;
-    private final Date created;
+    private final String updated;
+    private final String created;
     private final Integer progress;
     private final Status status;
 
-    public Image(Integer id, String name, Integer serverId, Date updated, Date created, Integer progress, Status status) {
+    public Image(Integer id, String name, Integer serverId, String updated, String created, Integer progress, Status status) {
         this.id = id;
         this.name = name;
         this.serverId = serverId;
@@ -39,11 +39,11 @@ public class Image implements Serializable {
         return serverId;
     }
 
-    public Date getUpdated() {
+    public String getUpdated() {
         return updated;
     }
 
-    public Date getCreated() {
+    public String getCreated() {
         return created;
     }
 
@@ -70,7 +70,7 @@ public class Image implements Serializable {
         return sb.toString();
     }
 
-    enum Status implements Serializable {
+    public enum Status implements Serializable {
         UNKNOWN, ACTIVE, SAVING, PREPARING, QUEUED, FAILED
     }
 }
