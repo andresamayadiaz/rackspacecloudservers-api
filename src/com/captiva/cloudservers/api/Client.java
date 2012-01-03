@@ -5,6 +5,8 @@ import com.captiva.cloudservers.api.common.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 
 import java.util.ArrayList;
@@ -15,7 +17,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -29,6 +33,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
+import org.apache.http.entity.StringEntity;
 
 public class Client extends Connection {
 	private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -147,25 +152,10 @@ public class Client extends Connection {
         return servers;
     }
     
-    private Server buildServer(Server response) throws Exception {
-        try {
-            return new Server(
-                    response.getId(), response.getHostId(), response.getName(), response.getAdminPass(),
-                    response.getImageId(), response.getFlavorId(),
-                    response.getStatus() == null ? null : ServerStatus.valueOf(response.getStatus().name()),
-                    response.getMetadata(), //metadataAsMap(response.getMetadata()),
-                    response.getAddresses(), //new Addresses(response.getAddresses()),
-                    response.getPersonality() //new Personality(response.getPersonality())
-            );
-        } catch (Exception e) {
-            throw new Exception("Can't build server", e);
-        }
-    }
-    
     public Server createServer(String name, int imageID, int flavorID) throws Exception {
         return createServer(name, imageID, flavorID, null);
     }
-
+    
     public Server createServer(String name, int imageID, int flavorID, Map<String, String> metadata) throws Exception {
         logger.log(Level.INFO, "Creating server {0} from image {1} running on flavor {2}...",
                 new Object[]{name, imageID, flavorID});
@@ -191,8 +181,37 @@ public class Client extends Connection {
             }
             server.setMetadata(rawMetadata);
         }
-        // @TODO: obtener el request como JsonObject y retornarlo como Server
-        return buildServer(makeEntityRequestInt(request, server, Server.class));
+        
+        // Serialize entity Object as Json
+    	// {"server":{"name":"NOMBRE_SERVIDOR","imageId":112,"flavorId":1}}
+        
+    	Gson gson = new Gson();
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	map.put("server", server);
+    	
+    	String entityJson = gson.toJson(map, map.getClass());
+    	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
+        
+        JsonObject objResponse = makeEntityRequestInt(request, entityJson, JsonObject.class);  
+        Server serverResponse = null;
+        serverResponse = gson.fromJson(objResponse.get("server"), Server.class);
+        
+        return buildServer(serverResponse);
+    }
+    
+    private Server buildServer(Server response) throws Exception {
+        try {
+            return new Server(
+                    response.getId(), response.getHostId(), response.getName(), response.getAdminPass(),
+                    response.getImageId(), response.getFlavorId(),
+                    response.getStatus() == null ? null : ServerStatus.valueOf(response.getStatus().name()),
+                    response.getMetadata(), //metadataAsMap(response.getMetadata()),
+                    response.getAddresses(), //new Addresses(response.getAddresses()),
+                    response.getPersonality() //new Personality(response.getPersonality())
+            );
+        } catch (Exception e) {
+            throw new Exception("Can't build server", e);
+        }
     }
     
     private static Map<String, String> metadataAsMap(Metadata metadata) {
@@ -228,31 +247,13 @@ public class Client extends Connection {
     }
     
     protected <T> T makeEntityRequestInt(HttpEntityEnclosingRequestBase request, final Object entity, Class<T> respType) throws Exception {
-        request.setEntity(new EntityTemplate(new ContentProducer() {
-            public void writeTo(OutputStream output) throws IOException {
-                try {
-                    /*IBindingFactory bindingFactory = BindingDirectory.getFactory(entity.getClass());
-                    final IMarshallingContext marshallingCxt = bindingFactory.createMarshallingContext();
-                    marshallingCxt.marshalDocument(entity, "UTF-8", true, output);*/
-                	//InputStream entityStream = null;
-                	//entityStream = IOUtils.toString((InputStream) entity);
-                	
-                	/*
-                	JsonParser parser = new JsonParser();
-        			String ent = IOUtils.toString(entityStream);
-                    logger.log(Level.INFO, ">>> case 203 Entity: {0}", ent);
-                    JsonObject obj = parser.parse(ent).getAsJsonObject();
-                    */
-                    //result = (T) obj;
-                	
-                } catch (Exception e) {
-                    IOException ioe = new IOException("Can't marshal server details");
-                    ioe.initCause(e);
-                    e.printStackTrace();
-                    throw ioe;
-                }
-            }
-        }));
+    	
+    	// Set the entity in the request
+    	StringEntity myEntity = new StringEntity(entity.toString(), "UTF-8");
+    	// TODO: evaluar si se requiere el encoding, probar enviar un nombre de entity con acentos
+    	//myEntity.setContentEncoding("UTF-8");
+    	request.setEntity(myEntity);
+    	
         return makeRequestInt(request, respType);
     }
     

@@ -43,7 +43,9 @@ public class BasicTest {
 			// Server Details Test
 			//Server server = con.getServerDetails(servers.get(0).getId());
 			
-			
+			// Server Create Server Test
+			//Server server = con.createServer("apiTest", 112, 1);
+			//System.out.println("Server ID: " + server.getId() + " Name: " + server.getName() + " adminPass: " + server.getAdminPass() + " Public IP: " + server.getAddresses().getPublic());
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
