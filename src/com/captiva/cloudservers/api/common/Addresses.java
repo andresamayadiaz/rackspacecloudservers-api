@@ -1,5 +1,9 @@
 package com.captiva.cloudservers.api.common;
 
+import java.io.Serializable;
+
+import com.google.gson.annotations.SerializedName;
+
 /** 
  * Schema fragment(s) for this class:
  * <pre>
@@ -11,17 +15,20 @@ package com.captiva.cloudservers.api.common;
  * &lt;/xs:complexType>
  * </pre>
  */
-public class Addresses
+public class Addresses implements Serializable
 {
-    private Public _public;
-    private Private _private;
+	@SerializedName("public")
+    private String _public;
+	
+	@SerializedName("private")
+    private String _private;
 
     /** 
      * Get the 'public' element value.
      * 
      * @return value
      */
-    public Public getPublic() {
+    public String getPublic() {
         return _public;
     }
 
@@ -30,7 +37,7 @@ public class Addresses
      * 
      * @param _public
      */
-    public void setPublic(Public _public) {
+    public void setPublic(String _public) {
         this._public = _public;
     }
 
@@ -39,7 +46,7 @@ public class Addresses
      * 
      * @return value
      */
-    public Private getPrivate() {
+    public String getPrivate() {
         return _private;
     }
 
@@ -48,7 +55,7 @@ public class Addresses
      * 
      * @param _private
      */
-    public void setPrivate(Private _private) {
+    public void setPrivate(String _private) {
         this._private = _private;
     }
 }

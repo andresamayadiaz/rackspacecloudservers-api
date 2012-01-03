@@ -261,9 +261,7 @@ public class Connection {
                 case 203:
                     try {
                         entityStream = entity.getContent();
-                        /*IBindingFactory bindingFactory = BindingDirectory.getFactory(respType);
-                        IUnmarshallingContext unmarshallingCxt = bindingFactory.createUnmarshallingContext();
-                        result = (T) unmarshallingCxt.unmarshalDocument(entityStream, "UTF-8");*/
+                        
                         JsonParser parser = new JsonParser();
             			String ent = IOUtils.toString(entityStream);
                         logger.log(Level.INFO, ">>> case 203 Entity: {0}", ent);
@@ -295,9 +293,6 @@ public class Connection {
                 default:
                     try {
                         entityStream = entity.getContent();
-                        /*IBindingFactory bindingFactory = BindingDirectory.getFactory(CloudServersAPIFault.class);
-                        IUnmarshallingContext unmarshallingCxt = bindingFactory.createUnmarshallingContext();
-                        CloudServersAPIFault fault = (CloudServersAPIFault) unmarshallingCxt.unmarshalDocument(entityStream, "UTF-8");*/
                         logger.log(Level.INFO, ">>> case default Entity: {0}", IOUtils.toString(entityStream));
                         done = true;
                         throw new Exception("case default");

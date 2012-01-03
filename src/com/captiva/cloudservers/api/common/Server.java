@@ -23,6 +23,13 @@ package com.captiva.cloudservers.api.common;
  * &lt;xs:element xmlns:ns="http://docs.rackspacecloud.com/servers/api/v1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" type="ns:Addresses" name="addresses"/>
  * </pre>
  */
+
+ /**
+  * Server: collection of information related to a server.
+  *
+  * @author Andres Amaya
+  */
+
 public class Server
 {
     private Metadata metadata;
@@ -38,6 +45,29 @@ public class Server
     private ServerStatus status;
     private Integer sharedIpGroupId;
 
+    /*
+    response.getId(), response.getName(), response.getAdminPass(),
+    response.getImageId(), response.getFlavorId(),
+    response.getStatus() == null ? null : ServerStatus.valueOf(response.getStatus().name()),
+    metadataAsMap(response.getMetadata()),
+    new Addresses(response.getAddresses()),
+    new Personality(response.getPersonality())
+    */
+    
+    public Server(Integer id, String name, String adminPass, Integer imageId, Integer flavorId, ServerStatus status, Metadata metadata, Addresses addresses, Personality personality ){
+    	
+    	this.id = id;
+    	this.name = name;
+    	this.adminPass = adminPass;
+    	this.imageId = imageId;
+    	this.flavorId = flavorId;
+    	this.status = status;
+    	this.metadata = metadata;
+    	this.addresses = addresses;
+    	this.personality = personality;
+    	
+    }
+    
     /** 
      * Get the 'metadata' element value.
      * 

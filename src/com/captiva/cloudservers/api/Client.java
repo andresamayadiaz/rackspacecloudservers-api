@@ -1,8 +1,9 @@
 package com.captiva.cloudservers.api;
 
+import com.captiva.cloudservers.api.common.*;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,19 +13,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.captiva.cloudservers.api.common.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import net.elasticgrid.rackspace.cloudservers.Addresses;
-import net.elasticgrid.rackspace.cloudservers.CloudServersException;
-import net.elasticgrid.rackspace.cloudservers.Personality;
-import net.elasticgrid.rackspace.cloudservers.Server;
-import net.elasticgrid.rackspace.cloudservers.Server.Status;
-import net.elasticgrid.rackspace.cloudservers.internal.Metadata;
-import net.elasticgrid.rackspace.cloudservers.internal.MetadataItem;
 
 import org.apache.http.HttpException;
 import org.apache.http.client.methods.HttpGet;
@@ -58,8 +50,7 @@ public class Client extends Connection {
     }
 	
 	private List<Flavor> buildListOfFlavors(HttpGet request) throws Exception {
-        JsonObject response = makeRequestInt(request, JsonObject.class); // Flavors.class
-        
+        JsonObject response = makeRequestInt(request, JsonObject.class);
         JsonArray flavarray = response.get("flavors").getAsJsonArray();
         List<Flavor> flavors = new ArrayList<Flavor>(flavarray.size());
         Gson gson = new Gson();
@@ -121,18 +112,30 @@ public class Client extends Connection {
         return buildListOfServers(request);
     }
     
+    // @TODO: buildServer parameters as JsonObject
     public Server getServerDetails(int serverID) throws Exception {
         logger.log(Level.INFO, "Retrieving detailed information for server {0}...", serverID);
         validateServerID(serverID);
         HttpGet request = new HttpGet(getServerManagementURL() + "/servers/" + serverID);
-        return buildServer(makeRequestInt(request, net.elasticgrid.rackspace.cloudservers.internal.Server.class));
+        
+        JsonObject response = makeRequestInt(request, JsonObject.class);    
+        Server server = null;
+        Gson gson = new Gson();
+        server = gson.fromJson(response.get("server"), Server.class);
+        
+        return buildServer(server);
     }
     
     private List<Server> buildListOfServers(HttpGet request) throws Exception {
-        Servers response = makeRequestInt(request, Servers.class);
-        List<Server> servers = new ArrayList<Server>(response.getServers().size());
-        for (net.elasticgrid.rackspace.cloudservers.internal.Server server : response.getServers())
-            servers.add(buildServer(server));
+    	JsonObject response = makeRequestInt(request, JsonObject.class);
+        JsonArray srvarray = response.get("servers").getAsJsonArray();
+        List<Server> servers = new ArrayList<Server>(srvarray.size());
+        Gson gson = new Gson();
+        for (JsonElement server : srvarray){
+        	Server srv = gson.fromJson(server, Server.class);
+        	servers.add(buildServer(srv));
+        }
+        
         return servers;
     }
     
@@ -142,12 +145,12 @@ public class Client extends Connection {
                     response.getId(), response.getName(), response.getAdminPass(),
                     response.getImageId(), response.getFlavorId(),
                     response.getStatus() == null ? null : ServerStatus.valueOf(response.getStatus().name()),
-                    metadataAsMap(response.getMetadata()),
-                    new Addresses(response.getAddresses()),
-                    new Personality(response.getPersonality())
+                    response.getMetadata(), //metadataAsMap(response.getMetadata()),
+                    response.getAddresses(), //new Addresses(response.getAddresses()),
+                    response.getPersonality() //new Personality(response.getPersonality())
             );
-        } catch (UnknownHostException e) {
-            throw new CloudServersException("Can't build server", e);
+        } catch (Exception e) {
+            throw new Exception("Can't build server", e);
         }
     }
     

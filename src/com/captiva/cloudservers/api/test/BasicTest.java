@@ -29,13 +29,17 @@ public class BasicTest {
 			
 			Client con = new Client("andresamaya", "93eff8920da9ff17ea378eea54cf5207");
 			
+			// Flavors Test
 			//List<Flavor> flavors = con.getFlavors();
 			//Flavor flavor = con.getFlavorDetails(2);
 			
+			// Images Test
 			//List<Image> images = con.getImages();
-			//images.size();
+			//Image image = con.getImageDetails(112);
 			
-			
+			// Servers List Test
+			List<Server> servers = con.getServers();
+			servers.size();
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
