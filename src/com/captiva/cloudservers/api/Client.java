@@ -40,7 +40,6 @@ public class Client extends Connection {
 	
 	public Client(String username, String apiKey) throws Exception {
 		super(username, apiKey);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public List<Flavor> getFlavors() throws Exception {
@@ -184,19 +183,61 @@ public class Client extends Connection {
         
         // Serialize entity Object as Json
     	// {"server":{"name":"NOMBRE_SERVIDOR","imageId":112,"flavorId":1}}
-        
     	Gson gson = new Gson();
     	Map<String, Object> map = new HashMap<String, Object>();
     	map.put("server", server);
-    	
     	String entityJson = gson.toJson(map, map.getClass());
     	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
-        
         JsonObject objResponse = makeEntityRequestInt(request, entityJson, JsonObject.class);  
         Server serverResponse = null;
         serverResponse = gson.fromJson(objResponse.get("server"), Server.class);
         
         return buildServer(serverResponse);
+    }
+    
+    public void rebootServer(int serverID) throws Exception {
+        rebootServer(serverID, RebootType.SOFT);
+    }
+    
+    public void rebootServer(int serverID, RebootType type) throws Exception {
+        logger.log(Level.INFO, "Rebooting server {0} via {1} reboot...", new Object[]{serverID, type.name()});
+        validateServerID(serverID);
+        HttpPost request = new HttpPost(getServerManagementURL() + "/servers/" + serverID + "/action");
+        Reboot reboot = new Reboot();
+        reboot.setType(RebootType.valueOf(type.name()));
+        
+        // Serialize Reboot Object
+        Gson gson = new Gson();
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	map.put("reboot", reboot);
+    	String entityJson = gson.toJson(map, map.getClass());
+    	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
+        
+        makeEntityRequestInt(request, entityJson);
+    }
+    
+    public void rebuildServer(int serverID) throws Exception {
+        logger.log(Level.INFO, "Rebuilding server {0}...", serverID);
+        validateServerID(serverID);
+        HttpPost request = new HttpPost(getServerManagementURL() + "/servers/" + serverID + "/action");
+        makeEntityRequestInt(request, new Rebuild());
+    }
+    
+    public void rebuildServer(int serverID, int imageID) throws Exception {
+        logger.log(Level.INFO, "Rebuilding server {0} from image {1}...", new Object[]{serverID, imageID});
+        validateServerID(serverID);
+        HttpPost request = new HttpPost(getServerManagementURL() + "/servers/" + serverID + "/action");
+        Rebuild rebuild = new Rebuild();
+        rebuild.setImageId(imageID);
+        
+        // Serialize Rebuild Object
+        Gson gson = new Gson();
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	map.put("rebuild", rebuild);
+    	String entityJson = gson.toJson(map, map.getClass());
+    	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
+        
+        makeEntityRequestInt(request, entityJson);
     }
     
     private Server buildServer(Server response) throws Exception {

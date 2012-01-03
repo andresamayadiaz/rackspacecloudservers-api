@@ -260,16 +260,20 @@ public class Connection {
                 case 202:
                 case 203:
                     try {
-                        entityStream = entity.getContent();
+                    	// Validate not null response
+                    	if(!entity.getContent().toString().isEmpty()){
+                    		
+	                        entityStream = entity.getContent();
+	                        JsonParser parser = new JsonParser();
+	            			String ent = IOUtils.toString(entityStream);
+	                        logger.log(Level.INFO, ">>> case 203 Entity: {0}", ent);
+	                        JsonObject obj = parser.parse(ent).getAsJsonObject();
+	                        result = (T) obj;
                         
-                        JsonParser parser = new JsonParser();
-            			String ent = IOUtils.toString(entityStream);
-                        logger.log(Level.INFO, ">>> case 203 Entity: {0}", ent);
-                        
-                        JsonObject obj = parser.parse(ent).getAsJsonObject();
-                        
-                        result = (T) obj;
-                        
+                    	} else {
+                    		logger.log(Level.INFO, ">>> case 203 Entity: NULL Response");
+                    	}
+ 
                     } finally {
                         entity.consumeContent();
                         IOUtils.closeQuietly(entityStream);
@@ -288,6 +292,11 @@ public class Connection {
                     break;
                 case 417:
                     throw new Exception(new IllegalArgumentException("Some parameters are invalid!")); // TODO: temp hack 'til Rackspace API is fixed!
+                case 409:
+                	entityStream = entity.getContent();
+                    logger.log(Level.INFO, ">>> case 409 Entity: {0}", IOUtils.toString(entityStream));
+                    done = true;
+                    throw new Exception("Can't Accomplish Requested Action");
                 case 400:
                 case 500:
                 default:

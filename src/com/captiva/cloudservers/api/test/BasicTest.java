@@ -44,8 +44,23 @@ public class BasicTest {
 			//Server server = con.getServerDetails(servers.get(0).getId());
 			
 			// Server Create Server Test
-			//Server server = con.createServer("apiTest", 112, 1);
+			// TODO: evaluar si se requiere el encoding, probar enviar un nombre de entity con acentos
+			// TODO: probar el envio de metadata y que funcione
+			//Server server = con.createServer("apiTest2", 112, 1);
 			//System.out.println("Server ID: " + server.getId() + " Name: " + server.getName() + " adminPass: " + server.getAdminPass() + " Public IP: " + server.getAddresses().getPublic());
+			
+			// Reboot Server Test
+			//Reboot reboot = new Reboot();
+			//reboot.setType(RebootType.SOFT);
+			// TODO: lanza un java.lang.Exception not a JSONObject, debugear y corregir
+			//con.rebootServer(ID); // 20475981
+			
+			// Rebuild Server Test
+			//Integer serverId = 20475981;
+			//Integer imageId = 112; // Se puede omitir y lo regenera con su misma imagen
+			//con.rebuildServer(serverId, imageId);
+			
+			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
