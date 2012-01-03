@@ -38,8 +38,12 @@ public class BasicTest {
 			//Image image = con.getImageDetails(112);
 			
 			// Servers List Test
-			List<Server> servers = con.getServers();
-			servers.size();
+			//List<Server> servers = con.getServers();
+			
+			// Server Details Test
+			//Server server = con.getServerDetails(servers.get(0).getId());
+			
+			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

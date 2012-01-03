@@ -3,6 +3,8 @@ package com.captiva.cloudservers.api;
 import com.captiva.cloudservers.api.common.*;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 
 import java.util.ArrayList;
@@ -17,10 +19,16 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpException;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ContentProducer;
+import org.apache.http.entity.EntityTemplate;
 
 public class Client extends Connection {
 	private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -142,7 +150,7 @@ public class Client extends Connection {
     private Server buildServer(Server response) throws Exception {
         try {
             return new Server(
-                    response.getId(), response.getName(), response.getAdminPass(),
+                    response.getId(), response.getHostId(), response.getName(), response.getAdminPass(),
                     response.getImageId(), response.getFlavorId(),
                     response.getStatus() == null ? null : ServerStatus.valueOf(response.getStatus().name()),
                     response.getMetadata(), //metadataAsMap(response.getMetadata()),
@@ -152,6 +160,39 @@ public class Client extends Connection {
         } catch (Exception e) {
             throw new Exception("Can't build server", e);
         }
+    }
+    
+    public Server createServer(String name, int imageID, int flavorID) throws Exception {
+        return createServer(name, imageID, flavorID, null);
+    }
+
+    public Server createServer(String name, int imageID, int flavorID, Map<String, String> metadata) throws Exception {
+        logger.log(Level.INFO, "Creating server {0} from image {1} running on flavor {2}...",
+                new Object[]{name, imageID, flavorID});
+        if (name == null)
+            throw new IllegalArgumentException("Server name has to be specified!");
+        if (imageID == 0)
+            throw new IllegalArgumentException("Image ID has to be specified!");
+        if (flavorID == 0)
+            throw new IllegalArgumentException("Flavor ID has to be specified!");
+        HttpPost request = new HttpPost(getServerManagementURL() + "/servers");
+        Server server = new Server();
+        server.setName(name);
+        server.setImageId(imageID);
+        server.setFlavorId(flavorID);
+        if (metadata != null && !metadata.isEmpty()) {
+            Metadata rawMetadata = new Metadata();
+            List<MetadataItem> metadataItems = rawMetadata.getMetadatas();
+            for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                MetadataItem item = new MetadataItem();
+                item.setKey(entry.getKey());
+                item.setString(entry.getValue());
+                metadataItems.add(item);
+            }
+            server.setMetadata(rawMetadata);
+        }
+        // @TODO: obtener el request como JsonObject y retornarlo como Server
+        return buildServer(makeEntityRequestInt(request, server, Server.class));
     }
     
     private static Map<String, String> metadataAsMap(Metadata metadata) {
@@ -180,6 +221,39 @@ public class Client extends Connection {
         } catch (Exception e){
         	throw new Exception (e.getMessage(), e);
         }
+    }
+    
+    protected void makeEntityRequestInt(HttpEntityEnclosingRequestBase request, final Object entity) throws Exception {
+        makeEntityRequestInt(request, entity, Void.class);
+    }
+    
+    protected <T> T makeEntityRequestInt(HttpEntityEnclosingRequestBase request, final Object entity, Class<T> respType) throws Exception {
+        request.setEntity(new EntityTemplate(new ContentProducer() {
+            public void writeTo(OutputStream output) throws IOException {
+                try {
+                    /*IBindingFactory bindingFactory = BindingDirectory.getFactory(entity.getClass());
+                    final IMarshallingContext marshallingCxt = bindingFactory.createMarshallingContext();
+                    marshallingCxt.marshalDocument(entity, "UTF-8", true, output);*/
+                	//InputStream entityStream = null;
+                	//entityStream = IOUtils.toString((InputStream) entity);
+                	
+                	/*
+                	JsonParser parser = new JsonParser();
+        			String ent = IOUtils.toString(entityStream);
+                    logger.log(Level.INFO, ">>> case 203 Entity: {0}", ent);
+                    JsonObject obj = parser.parse(ent).getAsJsonObject();
+                    */
+                    //result = (T) obj;
+                	
+                } catch (Exception e) {
+                    IOException ioe = new IOException("Can't marshal server details");
+                    ioe.initCause(e);
+                    e.printStackTrace();
+                    throw ioe;
+                }
+            }
+        }));
+        return makeRequestInt(request, respType);
     }
     
     private void validateServerID(int serverID) throws IllegalArgumentException {

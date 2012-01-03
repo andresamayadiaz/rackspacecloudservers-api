@@ -54,9 +54,14 @@ public class Server
     new Personality(response.getPersonality())
     */
     
-    public Server(Integer id, String name, String adminPass, Integer imageId, Integer flavorId, ServerStatus status, Metadata metadata, Addresses addresses, Personality personality ){
+    public Server(){
+    	
+    }
+    
+    public Server(Integer id, String hostId, String name, String adminPass, Integer imageId, Integer flavorId, ServerStatus status, Metadata metadata, Addresses addresses, Personality personality ){
     	
     	this.id = id;
+    	this.hostId = hostId;
     	this.name = name;
     	this.adminPass = adminPass;
     	this.imageId = imageId;
