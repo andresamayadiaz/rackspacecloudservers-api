@@ -56,10 +56,23 @@ public class BasicTest {
 			//con.rebootServer(ID); // 20475981
 			
 			// Rebuild Server Test
+			// TODO: no se probo correctamente la funcionalidad
 			//Integer serverId = 20475981;
 			//Integer imageId = 112; // Se puede omitir y lo regenera con su misma imagen
-			//con.rebuildServer(serverId, imageId);
+			//con.rebuildServer(serverId);
 			
+			// Resize Server Test
+			//Integer serverId = 20475981;
+			//Integer flavorId = 1;
+			//con.resizeServer(serverId, flavorId);
+			
+			// Confirm Resize Server Test
+			//Integer serverId = 20475981;
+			//con.confirmResize(serverId);
+			
+			// Revert Resize Server
+			//Integer serverId = 20475981;
+			//con.revertResize(serverId);
 			
 			
 		} catch (Exception e) {

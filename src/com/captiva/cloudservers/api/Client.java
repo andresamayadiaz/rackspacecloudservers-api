@@ -1,14 +1,7 @@
 package com.captiva.cloudservers.api;
 
-import com.captiva.cloudservers.api.common.*;
-
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,23 +10,22 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.gson.FieldNamingPolicy;
+import org.apache.http.HttpException;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
+
+import com.captiva.cloudservers.api.common.*;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpException;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.ContentProducer;
-import org.apache.http.entity.EntityTemplate;
-import org.apache.http.entity.StringEntity;
 
 public class Client extends Connection {
 	private static final Logger logger = Logger.getLogger(Client.class.getName());
@@ -240,6 +232,88 @@ public class Client extends Connection {
         makeEntityRequestInt(request, entityJson);
     }
     
+    public void resizeServer(int serverID, int flavorID) throws Exception {
+        logger.log(Level.INFO, "Resizing server {0} to run on flavor {1}...", new Object[]{serverID, flavorID});
+        validateServerID(serverID);
+        HttpPost request = new HttpPost(getServerManagementURL() + "/servers/" + serverID + "/action");
+        Resize resize = new Resize();
+        resize.setFlavorId(flavorID);
+        
+        // Serialize Resize Object
+        Gson gson = new Gson();
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	map.put("resize", resize);
+    	String entityJson = gson.toJson(map, map.getClass());
+    	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
+        
+        makeEntityRequestInt(request, entityJson);
+    }
+    
+    public void confirmResize(int serverID) throws Exception {
+        logger.log(Level.INFO, "Confirming resize of server {0}...", serverID);
+        validateServerID(serverID);
+        HttpPost request = new HttpPost(getServerManagementURL() + "/servers/" + serverID + "/action");
+        
+        // Serialize ConfirmResize Object
+        Gson gson = new GsonBuilder().serializeNulls().create();
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	map.put("confirmResize", new ConfirmResize());
+    	String entityJson = gson.toJson(map, map.getClass());
+    	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
+        
+        makeEntityRequestInt(request, entityJson);
+    }
+    
+    public void revertResize(int serverID) throws Exception {
+        logger.log(Level.INFO, "Cancelling resize of server {0}...", serverID);
+        validateServerID(serverID);
+        HttpPost request = new HttpPost(getServerManagementURL() + "/servers/" + serverID + "/action");
+        
+        // Serialize RevertResize Object
+        Gson gson = new GsonBuilder().serializeNulls().create();
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	map.put("revertResize", new ConfirmResize());
+    	String entityJson = gson.toJson(map, map.getClass());
+    	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
+        
+        makeEntityRequestInt(request, entityJson);
+    }
+    
+    public void updateServerName(int serverID, String name) throws Exception {
+        updateServerNameAndPassword(serverID, name, null);
+    }
+    
+    public void updateServerPassword(int serverID, String password) throws Exception {
+        updateServerNameAndPassword(serverID, null, password);
+    }
+    
+    public void updateServerNameAndPassword(final int serverID, final String name, final String password) throws Exception {
+        validateServerID(serverID);
+        HttpPut request = new HttpPut(getServerManagementURL() + "/servers/" + serverID);
+        Server server = new Server();
+        server.setId(serverID);
+        if (name != null)
+            server.setName(name);
+        if (password != null)
+            server.setAdminPass(password);
+        
+        // Serialize Server Object
+    	Gson gson = new Gson();
+    	Map<String, Object> map = new HashMap<String, Object>();
+    	map.put("server", server);
+    	String entityJson = gson.toJson(map, map.getClass());
+    	logger.log(Level.INFO, "Entity As Json: {0}",entityJson);
+        
+        makeEntityRequestInt(request, entityJson);
+    }
+    
+    public void deleteServer(int serverID) throws Exception {
+        logger.log(Level.INFO, "Deleting server {0}...", serverID);
+        validateServerID(serverID);
+        HttpDelete request = new HttpDelete(getServerManagementURL() + "/servers/" + serverID);
+        makeRequestInt(request);
+    }
+    
     private Server buildServer(Server response) throws Exception {
         try {
             return new Server(
@@ -253,6 +327,26 @@ public class Client extends Connection {
         } catch (Exception e) {
             throw new Exception("Can't build server", e);
         }
+    }
+    
+    public Limits getLimits() throws Exception {
+        HttpGet request = new HttpGet(getServerManagementURL() + "/limits");
+        Limits response = makeRequestInt(request, Limits.class);
+        List<RateLimit> rateLimits = new ArrayList<RateLimit>(response.getRate().getRateLimits().size());
+        for (RateLimit limit : response.getRate().getRateLimits())
+            rateLimits.add(new RateLimit(
+                    HTTPVerb.valueOf(limit.getVerb().name()),
+                    limit.getURI(),
+                    limit.getRegex(),
+                    limit.getValue(),
+                    limit.getRemaining(),
+                    RateLimit.Unit.valueOf(limit.getUnit().name()),
+                    limit.getResetTime()
+            ));
+        List<AbsoluteLimit> absoluteLimits = new ArrayList<AbsoluteLimit>(response.getAbsolute().getAbsoluteLimits().size());
+        for (AbsoluteLimit limit : response.getAbsolute().getAbsoluteLimits())
+            absoluteLimits.add(new AbsoluteLimit(limit.getName(), limit.getValue()));
+        return new Limits(rateLimits, absoluteLimits);
     }
     
     private static Map<String, String> metadataAsMap(Metadata metadata) {
