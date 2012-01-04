@@ -13,7 +13,12 @@ public class AbsoluteLimit
 {
     private String name;
     private int value;
-
+    
+    public AbsoluteLimit(String name, int value){
+    	this.name = name;
+    	this.value = value;
+    }
+    
     /** 
      * Get the 'name' attribute value.
      * 

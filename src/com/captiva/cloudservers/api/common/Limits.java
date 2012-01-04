@@ -1,5 +1,7 @@
 package com.captiva.cloudservers.api.common;
 
+import java.util.List;
+
 /** 
  * Schema fragment(s) for this class:
  * <pre>
@@ -15,7 +17,12 @@ public class Limits
 {
     private RateLimits rate;
     private AbsoluteLimits absolute;
-
+    
+    public Limits(RateLimits rateLimits, AbsoluteLimits absoluteLimits){
+    	this.rate = rateLimits;
+    	this.absolute = absoluteLimits;
+    }
+    
     /** 
      * Get the 'rate' element value.
      * 

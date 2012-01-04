@@ -46,7 +46,7 @@ public class BasicTest {
 			// Server Create Server Test
 			// TODO: evaluar si se requiere el encoding, probar enviar un nombre de entity con acentos
 			// TODO: probar el envio de metadata y que funcione
-			//Server server = con.createServer("apiTest2", 112, 1);
+			//Server server = con.createServer("apiTest3", 112, 1);
 			//System.out.println("Server ID: " + server.getId() + " Name: " + server.getName() + " adminPass: " + server.getAdminPass() + " Public IP: " + server.getAddresses().getPublic());
 			
 			// Reboot Server Test
@@ -56,10 +56,15 @@ public class BasicTest {
 			//con.rebootServer(ID); // 20475981
 			
 			// Rebuild Server Test
-			// TODO: no se probo correctamente la funcionalidad
+			// TODO: no se probo
 			//Integer serverId = 20475981;
 			//Integer imageId = 112; // Se puede omitir y lo regenera con su misma imagen
 			//con.rebuildServer(serverId);
+			
+			// Delete Server Test
+			// TODO: no se probo
+			//Integer serverId = 20475981;
+			////con.deleteServer(serverId);
 			
 			// Resize Server Test
 			//Integer serverId = 20475981;
@@ -67,12 +72,21 @@ public class BasicTest {
 			//con.resizeServer(serverId, flavorId);
 			
 			// Confirm Resize Server Test
+			// TODO: no se probo
 			//Integer serverId = 20475981;
 			//con.confirmResize(serverId);
 			
 			// Revert Resize Server
+			// TODO: no se probo
 			//Integer serverId = 20475981;
 			//con.revertResize(serverId);
+			
+			// Update Server Name
+			// TODO falla al retornar la llamada vacia
+			// Server ID: 20479120 Name: apiTest3 adminPass: apiTest35q77vQNSm Public IP: 108.166.124.232
+			//Integer serverId = 20479120;
+			//con.updateServerName(serverId, "NewName");
+			
 			
 			
 		} catch (Exception e) {

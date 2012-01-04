@@ -21,7 +21,7 @@ public class RateLimit
     private String regex;
     private int value;
     private int remaining;
-    private RateLimitUnit unit;
+    public RateLimitUnit Unit;
     private long resetTime;
 
     /** 
@@ -120,7 +120,7 @@ public class RateLimit
      * @return value
      */
     public RateLimitUnit getUnit() {
-        return unit;
+        return Unit;
     }
 
     /** 
@@ -129,7 +129,7 @@ public class RateLimit
      * @param unit
      */
     public void setUnit(RateLimitUnit unit) {
-        this.unit = unit;
+        this.Unit = unit;
     }
 
     /** 

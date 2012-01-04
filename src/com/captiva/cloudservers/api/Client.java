@@ -329,9 +329,10 @@ public class Client extends Connection {
         }
     }
     
-    public Limits getLimits() throws Exception {
+    /*public Limits getLimits() throws Exception {
         HttpGet request = new HttpGet(getServerManagementURL() + "/limits");
         Limits response = makeRequestInt(request, Limits.class);
+        
         List<RateLimit> rateLimits = new ArrayList<RateLimit>(response.getRate().getRateLimits().size());
         for (RateLimit limit : response.getRate().getRateLimits())
             rateLimits.add(new RateLimit(
@@ -347,9 +348,10 @@ public class Client extends Connection {
         for (AbsoluteLimit limit : response.getAbsolute().getAbsoluteLimits())
             absoluteLimits.add(new AbsoluteLimit(limit.getName(), limit.getValue()));
         return new Limits(rateLimits, absoluteLimits);
-    }
+    }*/
     
-    private static Map<String, String> metadataAsMap(Metadata metadata) {
+    @SuppressWarnings("unused")
+	private static Map<String, String> metadataAsMap(Metadata metadata) {
         if (metadata == null)
             return Collections.emptyMap();
         Map<String, String> meta = new HashMap<String, String>();
@@ -406,8 +408,9 @@ public class Client extends Connection {
         if (imageID == 0)
             throw new IllegalArgumentException("Invalid imageID " + imageID);
     }
-
-    private void validateSharedIPGroupID(int groupID) throws IllegalArgumentException {
+    
+    @SuppressWarnings("unused")
+	private void validateSharedIPGroupID(int groupID) throws IllegalArgumentException {
         if (groupID == 0)
             throw new IllegalArgumentException("Invalid shared IP group ID " + groupID);
     }
