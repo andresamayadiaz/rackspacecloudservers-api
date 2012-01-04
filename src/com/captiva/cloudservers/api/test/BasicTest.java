@@ -27,14 +27,18 @@ public class BasicTest {
 		
 		try {
 			
-			Client con = new Client("andresamaya", "93eff8920da9ff17ea378eea54cf5207");
+			Client con = new Client("andresamaya", "");
 			
-			// Flavors Test
+			// List Flavors Test
 			//List<Flavor> flavors = con.getFlavors();
+			
+			// Get Flavor Details Test
 			//Flavor flavor = con.getFlavorDetails(2);
 			
-			// Images Test
+			// List Images Test
 			//List<Image> images = con.getImages();
+			
+			// Get Image Details Test
 			//Image image = con.getImageDetails(112);
 			
 			// Servers List Test
@@ -83,10 +87,13 @@ public class BasicTest {
 			
 			// Update Server Name
 			// TODO falla al retornar la llamada vacia
-			// Server ID: 20479120 Name: apiTest3 adminPass: apiTest35q77vQNSm Public IP: 108.166.124.232
 			//Integer serverId = 20479120;
 			//con.updateServerName(serverId, "NewName");
 			
+			// Update Server Password
+			// Server ID: 20479120 Name: apiTest3 adminPass: apiTest35q77vQNSm Public IP: 108.166.124.232
+			//Integer serverId = 20479120;
+			//con.updateServerPassword(serverId, "ceis12345");
 			
 			
 		} catch (Exception e) {

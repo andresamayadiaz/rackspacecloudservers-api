@@ -51,9 +51,9 @@ import com.google.gson.reflect.TypeToken;
 
 @SuppressWarnings("deprecation")
 public class Connection {
-
+	
 	private int maxRetries = 5;
-    private String userAgent = "Elastic-Grid/";
+    private String userAgent = "CloudServers-API/";
     private HttpClient hc = null;
     private int maxConnections = 100;
     private String proxyHost = null;
